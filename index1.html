@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maptalks.org/script/maptalks/maptalks.css">
+  <style type="text/css">
+    html,
+    body {
+      margin: 0px;
+      height: 100%;
+    }
+
+    .heading {
+      background-color: #34495e;
+      color: #fff;
+      padding: 8px 8px;
+      font: 24px sans-serif;
+    }
+  </style>
+  <title>Money Yu</title>
+</head>
+
+<body scroll="no">
+  <div id="mapObj" style="width:100%;height:100%;">Loading data.....</div>
+  <script type="text/javascript" src="https://maptalks.org/script/maptalks/maptalks.js"></script>
+  <script type="text/javascript" src="https://maptalks.org/gallery/common/maptalks.webgl.js"></script>
+  <script type="text/javascript" src="https://maptalks.org/gallery/extrude-buildings/buildings.js"></script>
+  <script type="text/javascript" src="maptalks.formats.min.js"></script>
+  <script type="text/javascript">
+    var center = [120.286024, 22.6265264];
+    var map = new maptalks.Map('mapObj',
+      {
+        center: center,
+        zoom: 19,
+        zoomControl: true,
+        pitch: 30,
+        // minZoom: 16,
+        maxZoom: 30,
+        baseLayer: new maptalks.TileLayer('tile',
+          {
+            'urlTemplate': 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+            'subdomains': ['a', 'b', 'c', 'd']
+          }),
+        attribution: {
+          content: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        },
+        spatialReference: {
+          'rojection': 'EPSG:3857',
+          'resolutions': (function () {
+            const resolutions = [];
+            const d = 2 * 6378137 * Math.PI;
+            const maxLevel = 31; //最大zoom
+            for (let i = 0; i < maxLevel; i++) {
+              resolutions[i] = d / (256 * Math.pow(2, i));
+            }
+            return resolutions;
+          })()
+        }
+      });
+
+    var temp;
+    var features = [];
+    maptalks.Formats.geojson('http://localhost:5500/mopcon.geojson', function (err, geojson) {
+      geojson.features.forEach(function (f) {
+        // 必須要是 Polygon 才能使用 ExtrudePolygonLayer
+        if (f.geometry.type == "Polygon") {
+          f.properties.height = 5;
+          features.push(f);
+        }
+      });
+
+      temp = new maptalks.ExtrudePolygonLayer('tempLayer', features, {
+        'forceRenderOnMoving': true,
+        'ambientLight': [0, 0, 0]
+      })
+        .setStyle([
+          {
+            filter: ['==', 'name', 'm'],
+            symbol: { 'polygonFill': '#03A1DA' }
+          },
+          {
+            filter: ['==', 'name', 'o'],
+            symbol: { 'polygonFill': '#86BF28' }
+          },
+          {
+            filter: ['==', 'name', 'p'],
+            symbol: { 'polygonFill': '#CEDA07' }
+          },
+          {
+            filter: ['==', 'name', 'c'],
+            symbol: { 'polygonFill': '#F3B129' }
+          },
+          {
+            filter: ['==', 'name', 'n'],
+            symbol: { 'polygonFill': '#F12522' }
+          },
+          {
+            filter: true,
+            symbol: { 'polygonFill': '#bbb' }
+          }
+        ])
+        .addTo(map);
+    });
+  </script>
+</body>
+
+</html>
